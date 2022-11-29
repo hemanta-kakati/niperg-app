@@ -1,12 +1,26 @@
-import { View, Text } from "react-native";
+import { StyleSheet,View, Text, Image } from "react-native";
 import React from "react";
 
 const Preloader = () => {
   return (
-    <View>
-      <Text>Preloader</Text>
+    <View style={styles.body}>
+      <Image source={require('../assets/niperg-logo-medium.png')} style={styles.image}  resizeMode="cover"/>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }, 
+  image: {
+    height: 200,
+    width: 200,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+});
 
 export default Preloader;

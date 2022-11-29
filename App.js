@@ -20,7 +20,7 @@ export default function App() {
 
   return (
     <PaperProvider>
-      <View style={styles.container}>
+      <View style={styles.body}>
         {isPreloader ? <Preloader /> : <Login />}
       </View>
     </PaperProvider>
@@ -28,12 +28,12 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
+  body: {
+    flex: 1,
     // flexDirection: "row",
     // backgroundColor: "#fff",
     // alignItems: "center",
     // justifyContent: "center",
-    marginTop: 30,
+    // marginTop: 30,
   },
 });
