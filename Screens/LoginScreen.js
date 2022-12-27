@@ -3,9 +3,24 @@ import React, { useEffect, useState } from "react";
 import { TextInput, Button } from "react-native-paper";
 import { Link } from "@react-navigation/native";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
-const baseUrl = "http://172.16.120.26/niperg-app-api/api.php?action=";
-const Login = () => {
+const baseUrl = "http://172.16.120.26:8080/niperg-app-api/api.php?action=";
+
+async function save(key, value) {
+  await SecureStore.setItemAsync(key, value);
+}
+
+async function getValueFor(key) {
+  let result = await SecureStore.getItemAsync(key);
+  if (result) {
+    return result;
+  } else {
+    alert("No values stored under that key.");
+  }
+}
+
+const Login = ({ navigation, route }) => {
   const [email, setEmail] = useState("");
   const [hasEmailErr, setHasEmailErr] = useState(false);
   const [password, setPassword] = useState("");
@@ -24,6 +39,12 @@ const Login = () => {
     validateEmail(email);
   }, [email]);
 
+  useEffect(() => {
+    if (getValueFor("user_id")) {
+      navigation.navigate("WelcomeScreen");
+    }
+  }, []);
+
   const handleLogin = async () => {
     try {
       const resp = await axios.post(
@@ -39,13 +60,13 @@ const Login = () => {
           },
         }
       );
-      const { payload, msg } = resp.data;
-      if (payload == 2) {
+      const { status, msg, payload } = resp.data;
+      if (status == 2) {
         setEmail("");
         setPassword("");
         Alert.alert(
           "Authentication failed",
-          "The email or password you have entered is wrong!",
+          msg,
           [
             {
               text: "Close",
@@ -57,6 +78,14 @@ const Login = () => {
             onDismiss: () => {},
           }
         );
+      } else if (status == 1) {
+        if (payload) {
+          save("user_id", payload.login_id);
+          save("user_name", payload.login_name);
+          save("user_email", payload.login_email);
+          save("user_phone", payload.login_phone);
+          navigation.navigate("WelcomeScreen");
+        }
       }
     } catch (error) {
       console.log(error);
@@ -86,12 +115,16 @@ const Login = () => {
         onChangeText={(password) => setPassword(password)}
         secureTextEntry
       />
-      <Link style={{marginBottom: 15}} to={{ screen: "Profile", params: { id: "jane" } }}>
-        Don't have an account Sign Up.
-      </Link>
       <Button icon="account" mode="outlined" onPress={handleLogin}>
         Login
       </Button>
+      <Text style={{ marginBottom: 15, marginTop: 15 }}>Don't have an account? <Button><Link to={{screen: "SignupScreen"}}>Sign Up.</Link></Button></Text>
+      <Link
+        style={{ marginBottom: 15, marginTop: 15 }}
+        to={{ screen: "SignupScreen" }}
+      >
+        Don't have an account? Sign Up.
+      </Link>
     </View>
   );
 };
@@ -104,7 +137,7 @@ const styles = StyleSheet.create({
   },
   input: {
     justifyContent: "center",
-    width: "80%",
+    width: "95%",
     marginLeft: "auto",
     marginRight: "auto",
     marginBottom: 15,

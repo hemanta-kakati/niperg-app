@@ -1,7 +1,7 @@
 import { StyleSheet,View, Text, Image } from "react-native";
 import React from "react";
 
-const Preloader = () => {
+const SplashScreen = () => {
   return (
     <View style={styles.body}>
       <Image source={require('../assets/niperg-logo-medium.png')} style={styles.image}  resizeMode="cover"/>
@@ -23,4 +23,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Preloader;
+export default SplashScreen;
