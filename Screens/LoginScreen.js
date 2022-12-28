@@ -4,20 +4,12 @@ import { TextInput, Button } from "react-native-paper";
 import { Link } from "@react-navigation/native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { useGlobalContext } from "../global/context";
 
 const baseUrl = "http://172.16.120.26:8080/niperg-app-api/api.php?action=";
 
 async function save(key, value) {
   await SecureStore.setItemAsync(key, value);
-}
-
-async function getValueFor(key) {
-  let result = await SecureStore.getItemAsync(key);
-  if (result) {
-    return result;
-  } else {
-    alert("No values stored under that key.");
-  }
 }
 
 const Login = ({ navigation, route }) => {
@@ -26,6 +18,9 @@ const Login = ({ navigation, route }) => {
   const [password, setPassword] = useState("");
   // const isValidEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
   const isValidEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+  const { setIsLogged, isLoading, setIsLoading, setUserState } =
+    useGlobalContext();
 
   const validateEmail = (val) => {
     if (val && val.match(isValidEmail)) {
@@ -39,13 +34,8 @@ const Login = ({ navigation, route }) => {
     validateEmail(email);
   }, [email]);
 
-  useEffect(() => {
-    if (getValueFor("user_id")) {
-      navigation.navigate("WelcomeScreen");
-    }
-  }, []);
-
   const handleLogin = async () => {
+    setIsLoading(true);
     try {
       const resp = await axios.post(
         `${baseUrl}login_user`,
@@ -80,13 +70,30 @@ const Login = ({ navigation, route }) => {
         );
       } else if (status == 1) {
         if (payload) {
-          save("user_id", payload.login_id);
-          save("user_name", payload.login_name);
-          save("user_email", payload.login_email);
-          save("user_phone", payload.login_phone);
+          save(
+            "user_data",
+            JSON.stringify({
+              id: payload.login_id,
+              name: payload.login_name,
+              email: payload.login_email,
+              phone: payload.login_phone,
+            })
+          );
+          // save("user_name", payload.login_name);
+          // save("user_email", payload.login_email);
+          // save("user_phone", payload.login_phone);
+          setUserState({
+            id: payload.login_id,
+            name: payload.login_name,
+            email: payload.login_email,
+            phone: payload.login_phone,
+          });
+
+          setIsLogged(true);
           navigation.navigate("WelcomeScreen");
         }
       }
+      setIsLoading(false);
     } catch (error) {
       console.log(error);
     }
@@ -116,15 +123,18 @@ const Login = ({ navigation, route }) => {
         secureTextEntry
       />
       <Button icon="account" mode="outlined" onPress={handleLogin}>
-        Login
+        {!isLoading ? "Login" : "Loading"}
       </Button>
-      <Text style={{ marginBottom: 15, marginTop: 15 }}>Don't have an account? <Button><Link to={{screen: "SignupScreen"}}>Sign Up.</Link></Button></Text>
-      <Link
-        style={{ marginBottom: 15, marginTop: 15 }}
-        to={{ screen: "SignupScreen" }}
-      >
-        Don't have an account? Sign Up.
-      </Link>
+      <Text style={{ marginBottom: 15, marginTop: 15 }}>
+        Don't have an account?{" "}
+        <Button
+          onPress={() => {
+            navigation.navigate("SignupScreen");
+          }}
+        >
+          Sign UP
+        </Button>
+      </Text>
     </View>
   );
 };

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { TextInput, Button } from "react-native-paper";
 import { Link } from "@react-navigation/native";
 import axios from "axios";
+import { useGlobalContext } from "../global/context";
 
 const baseUrl = "http://172.16.120.26:8080/niperg-app-api/api.php?action=";
 const SignupScreen = () => {
@@ -12,6 +13,9 @@ const SignupScreen = () => {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const isValidEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+  const { isLoading, setIsLoading } = useGlobalContext();
+
   const validateEmail = (val) => {
     if (val && val.match(isValidEmail)) {
       setHasEmailErr(false);
@@ -25,62 +29,69 @@ const SignupScreen = () => {
   }, [email]);
 
   const signupHandler = async () => {
+    setIsLoading(true);
     try {
-        const resp = await axios.post(
-            `${baseUrl}save_user`, {
-                name, email, password, phone
-            }, {
-                headers: {
-                  "content-type": "application/json",
-                },
-              }
+      const resp = await axios.post(
+        `${baseUrl}save_user`,
+        {
+          name,
+          email,
+          password,
+          phone,
+        },
+        {
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      );
+
+      const { msg, status } = resp.data;
+
+      if (status == 1) {
+        Alert.alert(
+          "Success",
+          msg,
+          [
+            {
+              text: "Close",
+              style: "cancel",
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () => {
+              // reset fields
+              // setName("");
+              // setEmail("");
+              // setPhone("");
+              // setPassword("");
+            },
+          }
         );
-
-        const {msg, status} = resp.data;
-
-        if(status == 1){
-            Alert.alert(
-                "Success",
-                msg,
-                [
-                  {
-                    text: "Close",
-                    style: "cancel",
-                  },
-                ],
-                {
-                  cancelable: true,
-                  onDismiss: () => {
-                    // reset fields
-                    setName("");
-                    setEmail("");
-                    setPhone("");
-                    setPassword("");
-                  },
-                }
-              );
-        }
-        else if(status == 2){
-            Alert.alert(
-                "Error",
-                msg,
-                [
-                  {
-                    text: "Close",
-                    style: "cancel",
-                  },
-                ],
-                {
-                  cancelable: true,
-                  onDismiss: () => {
-                  },
-                }
-              );
-        }
-    } catch (error) {
-        
-    }
-  }
+        setName("");
+        setEmail("");
+        setPhone("");
+        setPassword("");
+      } else if (status == 2) {
+        Alert.alert(
+          "Error",
+          msg,
+          [
+            {
+              text: "Close",
+              style: "cancel",
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () => {},
+          }
+        );
+      }
+      setIsLoading(false);
+    } catch (error) {}
+  };
 
   return (
     <View style={styles.body}>
@@ -119,7 +130,7 @@ const SignupScreen = () => {
         onChangeText={(phone) => setPhone(phone)}
       />
       <Button icon="account" mode="outlined" onPress={signupHandler}>
-        Register
+        {isLoading ? "Loading..." : "Register"}
       </Button>
       <Link
         style={{ marginBottom: 15, marginTop: 15 }}
@@ -134,21 +145,21 @@ const SignupScreen = () => {
 export default SignupScreen;
 
 const styles = StyleSheet.create({
-    body: {
-        height: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-      },
-      input: {
-        justifyContent: "center",
-        width: "95%",
-        marginLeft: "auto",
-        marginRight: "auto",
-        marginBottom: 15,
-      },
-      image: {
-        width: 150,
-        height: 150,
-        alignItems: "center",
-      },
+  body: {
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  input: {
+    justifyContent: "center",
+    width: "95%",
+    marginLeft: "auto",
+    marginRight: "auto",
+    marginBottom: 15,
+  },
+  image: {
+    width: 150,
+    height: 150,
+    alignItems: "center",
+  },
 });

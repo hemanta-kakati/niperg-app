@@ -2,38 +2,34 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { Button } from "react-native-paper";
+import { useGlobalContext } from "../global/context";
 
-async function getValueFor(key) {
-  let result = await SecureStore.getItemAsync(key);
-  if (result) {
-    return result;
-  } else {
-    alert("No values stored under that key.");
-  }
-}
 
-const WelcomeScreen = () => {
-  const [userName, setUserName] = useState("");
+const WelcomeScreen = ({ navigation, route }) => {
+  // const [userName, setUserName] = useState("");
+  // const [userName1, setUserName1] = useState("Suman");
 
-    const deleteSession = async () => {
-        
-        const res = SecureStore.deleteItemAsync("user_id");
-        console.log(res);
-    }
+  const {setIsLogged, userState, setIsLoading, isLoading} = useGlobalContext();  
 
-  useEffect(() => {
-    if (getValueFor("user_id")) {
-        const name = getValueFor("user_name");
-        console.log(name);
-        setUserName(name);
-    }
-  }, []);
+  const signOut = () => {
+    setIsLoading(true);
+    SecureStore.deleteItemAsync("user_data").then((res) => {
+      console.log("setting isLogged to false");
+      setIsLogged(false);
+    });
+    setIsLogged(false);
+    setIsLoading(false);
+  };
+
   return (
     <View>
-      <Text>Welcome to NIPERG</Text>
-      <Button icon="camera" mode="contained" onPress={deleteSession} style={{
-        
-      }}>Logout</Button>
+      <Text style={styles.heading}>Welcome to NIPERG </Text>
+      <Text style={styles.lead}>{userState.name.toUpperCase()}</Text>
+      <Text style={styles.lead}>Your Email: {userState.email}</Text>
+      <Text style={styles.lead}>Your PhoneNo: {userState.phone}</Text>
+      <Button icon="camera" mode="contained" onPress={() => signOut()} >
+          {isLoading ? "Loading..." : "Logout"}
+      </Button>
     </View>
   );
 };
@@ -41,5 +37,16 @@ const WelcomeScreen = () => {
 export default WelcomeScreen;
 
 const styles = StyleSheet.create({
-
+  heading: {
+    fontSize: 25,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+    marginTop: 10
+  },
+  lead: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 10
+  }
 });
